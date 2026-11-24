@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Shonchoy logo</title>
+  <!-- Background: rounded teal tile -->
+  <rect width="256" height="256" rx="56" fill="#0F766E"/>
+  <!-- Archive lid -->
+  <rect x="51" y="56" width="154" height="46" rx="8" fill="#FFFFFF"/>
+  <!-- Archive body -->
+  <rect x="66" y="112" width="124" height="93" rx="10" fill="#FFFFFF"/>
+  <!-- Zipper teeth -->
+  <g fill="#0C4A46">
+    <rect x="118" y="123" width="20" height="11.5"/>
+    <rect x="118" y="146" width="20" height="11.5"/>
+    <rect x="118" y="169" width="20" height="11.5"/>
+    <rect x="118" y="192" width="20" height="8"/>
+  </g>
+</svg>
