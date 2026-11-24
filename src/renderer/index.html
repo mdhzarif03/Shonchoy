@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' file: data:" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shonchoy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="../../assets/shonchoy-64.png" alt="" class="logo" />
+      <div>
+        <h1>Shonchoy</h1>
+        <p>Free · open source · offline · by Muhammad Hasan Zarif</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="create" role="tab">Create</button>
+      <button class="tab" data-tab="open" role="tab">Open &amp; Extract</button>
+      <button class="tab" data-tab="repair" role="tab">Recovery</button>
+    </nav>
+    <div class="top-right">
+      <span id="tools" class="chip" title="Engines available on this machine"></span>
+      <select id="theme" aria-label="Theme">
+        <option value="system">System theme</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+      <button id="about" class="btn ghost" title="About (F1)">About</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= CREATE ================= -->
+    <section id="tab-create" class="panel active" role="tabpanel">
+      <div class="split">
+        <div class="card grow">
+          <div class="card-head">
+            <h2>Items to archive</h2>
+            <div class="row gap">
+              <button class="btn" id="add-files" data-action>Add files…</button>
+              <button class="btn" id="add-folder" data-action>Add folder…</button>
+              <button class="btn ghost" id="clear-queue" data-action>Clear</button>
+            </div>
+          </div>
+          <ul id="queue" class="queue"></ul>
+          <div id="queue-empty" class="empty">
+            <p><strong>Drop files or folders anywhere</strong></p>
+            <p class="muted">or use the buttons above. Dropping a single archive opens it.</p>
+          </div>
+          <p id="queue-summary" class="muted small"></p>
+        </div>
+
+        <aside class="side">
+          <div class="card">
+            <h3>Format</h3>
+            <select id="fmt" class="full"></select>
+            <p id="fmt-hint" class="muted small"></p>
+          </div>
+
+          <div class="card">
+            <h3>Compression</h3>
+            <label class="field">
+              <span>Level <b id="level-val">5</b> <span class="muted small">(0 fastest · 9 smallest)</span></span>
+              <input id="level" type="range" min="0" max="9" value="5" />
+            </label>
+            <label class="field">
+              <span>Method</span>
+              <select id="method" class="full"></select>
+            </label>
+            <label class="field">
+              <span>Solid archive</span>
+              <input id="solid" type="checkbox" checked />
+              <span class="muted small">Better ratio for many similar files</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <h3>Protection</h3>
+            <label class="field">
+              <span>Password</span>
+              <input id="pw" type="password" autocomplete="new-password" placeholder="Optional" class="full" />
+            </label>
+            <label class="field">
+              <span>Confirm password</span>
+              <input id="pw2" type="password" autocomplete="new-password" class="full" />
+            </label>
+            <label class="field inline">
+              <input id="show-pw" type="checkbox" /> <span>Show password</span>
+            </label>
+            <label class="field inline">
+              <input id="encnames" type="checkbox" checked />
+              <span>Encrypt file names too <span class="muted small">(7z only)</span></span>
+            </label>
+            <label class="field">
+              <span>Recovery data (PAR2)</span>
+              <select id="recovery" class="full">
+                <option value="0">None</option>
+                <option value="5">5% (repairs light damage)</option>
+                <option value="10" selected>10% (recommended)</option>
+                <option value="20">20% (for unreliable media)</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="card">
+            <h3>Output</h3>
+            <label class="field">
+              <span>Save as</span>
+              <div class="row">
+                <input id="out" type="text" class="grow" />
+                <button class="btn" id="out-browse" data-action>Browse…</button>
+              </div>
+            </label>
+            <label class="field">
+              <span>Split into volumes</span>
+              <select id="volume" class="full">
+                <option value="">Single file</option>
+                <option value="10m">10 MB</option>
+                <option value="100m">100 MB</option>
+                <option value="700m">700 MB (CD)</option>
+                <option value="4480m">4.4 GB (DVD)</option>
+                <option value="8g">8 GB</option>
+              </select>
+            </label>
+            <label class="field inline">
+              <input id="verify" type="checkbox" checked />
+              <span>Verify after creating</span>
+            </label>
+            <label class="field">
+              <span>Skip names</span>
+              <input id="excludes" type="text" class="full" value="Thumbs.db, desktop.ini, *.tmp" />
+            </label>
+          </div>
+
+          <button id="create" class="btn primary big" data-action>Create archive <kbd>Ctrl+Enter</kbd></button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= OPEN & EXTRACT ================= -->
+    <section id="tab-open" class="panel" role="tabpanel">
+      <div class="card">
+        <div class="card-head">
+          <div class="row gap">
+            <button class="btn primary" id="open-btn" data-action>Open archive…</button>
+            <div>
+              <h2 id="arch-name">No archive open</h2>
+              <p id="arch-meta" class="muted small">Open a 7z, ZIP, RAR, TAR, GZ, XZ or ZST file.</p>
+            </div>
+          </div>
+          <div class="row gap">
+            <input id="find" type="search" placeholder="Search all files…" />
+          </div>
+        </div>
+
+        <nav id="crumbs" class="crumbs" aria-label="Location"></nav>
+
+        <div class="table-wrap">
+          <table class="files">
+            <thead>
+              <tr>
+                <th class="chk"><input id="select-all" type="checkbox" title="Select all shown" /></th>
+                <th>Name</th>
+                <th class="num">Size</th>
+                <th class="num">Packed</th>
+                <th class="num">Saved</th>
+                <th>Modified</th>
+                <th class="lock" title="Encrypted">Lock</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div id="rows-empty" class="empty small muted">Nothing to show.</div>
+        </div>
+      </div>
+
+      <div class="card extract-bar">
+        <label class="field grow">
+          <span>Extract to</span>
+          <div class="row">
+            <input id="dest" type="text" class="grow" />
+            <button class="btn" id="dest-browse" data-action>Browse…</button>
+          </div>
+        </label>
+        <label class="field">
+          <span>If a file exists</span>
+          <select id="overwrite">
+            <option value="rename">Keep both (rename)</option>
+            <option value="replace">Replace</option>
+            <option value="skip">Skip</option>
+          </select>
+        </label>
+        <label class="field inline">
+          <input id="open-after" type="checkbox" checked />
+          <span>Open folder when done</span>
+        </label>
+        <div class="row gap end">
+          <button class="btn" id="test-btn" data-action>Test (F5)</button>
+          <button class="btn" id="extract-sel" data-action disabled>Extract selected</button>
+          <button class="btn primary" id="extract-all" data-action disabled>Extract all</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RECOVERY ================= -->
+    <section id="tab-repair" class="panel" role="tabpanel">
+      <div class="card narrow">
+        <h2>Recovery (PAR2)</h2>
+        <p class="muted">
+          PAR2 files add redundancy to an archive so damaged parts can be rebuilt.
+          Create them from the Create tab (Recovery option). Use this tab to check and repair an existing set.
+        </p>
+        <div class="row gap">
+          <input id="par-path" type="text" class="grow" placeholder="Choose a .par2 file" readonly />
+          <button class="btn" id="par-pick" data-action>Choose…</button>
+        </div>
+        <div class="row gap">
+          <button class="btn" id="par-verify" data-action disabled>Check integrity</button>
+          <button class="btn primary" id="par-repair" data-action disabled>Repair</button>
+        </div>
+        <p id="par-result" class="result"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <span id="status" class="status">Ready · everything runs on your computer</span>
+    <div class="progress-wrap hidden" id="progress-wrap">
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <span id="pct" class="small muted">0%</span>
+    </div>
+    <button id="cancel" class="btn ghost" disabled>Cancel (Esc)</button>
+  </footer>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+  <div id="dropzone" class="dropzone hidden"><div>Drop to add to the archive, or drop an archive to open it</div></div>
+
+  <dialog id="pw-dialog">
+    <form method="dialog" class="pw-form">
+      <h2 id="pw-title">Password required</h2>
+      <p id="pw-hint" class="muted small"></p>
+      <input id="pw-input" type="password" autocomplete="off" class="full" />
+      <div class="row gap end dlg-actions">
+        <button value="ok" class="btn primary" id="pw-ok">Continue</button>
+        <button value="cancel" class="btn ghost">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

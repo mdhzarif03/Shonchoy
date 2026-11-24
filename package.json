@@ -1,0 +1,60 @@
+{
+  "name": "shonchoy",
+  "version": "2.0.0",
+  "description": "Shonchoy: free, open-source, offline archive suite for Windows (7z, ZIP, TAR, ZST, RAR read, encryption, multi-volume, PAR2 recovery).",
+  "author": "Muhammad Hasan Zarif",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/engine.test.js",
+    "dist": "electron-builder --win"
+  },
+  "dependencies": {
+    "7zip-bin": "^5.2.0",
+    "node-unrar-js": "^2.0.2"
+  },
+  "devDependencies": {
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.hasanzarif.shonchoy",
+    "productName": "Shonchoy",
+    "copyright": "Copyright (c) 2026 Muhammad Hasan Zarif",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*",
+          "!README.txt"
+        ]
+      }
+    ],
+    "asarUnpack": [
+      "**/node_modules/7zip-bin/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/shonchoy.ico"
+    }
+  }
+}

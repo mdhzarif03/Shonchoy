@@ -1,83 +1,91 @@
-# Shonchoy
+# Shonchoy 2.0
 
-**Fast · free · open source · offline archive utility for Windows.**
-
+**Free, open-source, offline archive suite for Windows.**
 Developed by **Muhammad Hasan Zarif**. Licensed under the MIT License.
 
-Shonchoy is a lightweight archive manager. It needs no internet connection, has no ads, collects no telemetry, and has no runtime dependencies beyond Python's standard library. The single-file Windows build is a portable `.exe`.
+Shonchoy is an Electron desktop app. It creates and opens 7z, ZIP, TAR and its
+compressed variants, and reads RAR. It can encrypt, split archives into volumes,
+and add PAR2 recovery data. It runs entirely on your machine: no account, no
+telemetry, no internet connection.
 
 ---
 
-## Features (v1.0.0)
+## What it does
 
-**Compress**
-- ZIP with Deflate, BZip2, LZMA or Store methods
-- TAR, TAR.GZ, TAR.BZ2 and TAR.XZ
-- Compression level 0–9
-- Add multiple files and whole folders at once
-- Live size estimate for everything you add. Calculation runs in the background, so the window never freezes.
-- Skip names with wildcards such as `*.tmp`, `Thumbs.db`, `desktop.ini`
-- Smart default output name and folder
-- Safe writing: output goes to `name.part` and is renamed only on success, so a cancelled or failed job never leaves a broken archive behind
-- Overwrite confirmation
+**Create**
+- 7z (LZMA2, PPMd, BZip2, Deflate, Store), with AES-256 encryption and optional encrypted file names
+- ZIP (Deflate, BZip2, LZMA, PPMd, Store), with AES-256 encryption
+- TAR, TAR.GZ, TAR.BZ2, TAR.XZ, and TAR.ZST (Zstandard)
+- Split into volumes (10 MB to 8 GB) for 7z and ZIP
+- PAR2 recovery data (5%, 10% or 20%) so damaged archives can be repaired
+- Verify after creating, skip-name patterns, solid mode, compression level 0–9
+- Drag and drop files or folders anywhere in the window
+- Output files are written only when the job succeeds. A cancelled or failed job leaves nothing behind.
 
 **Open and extract**
-- Browse archive contents as a folder tree
-- Live search filter
-- Multi-select, then extract only what you picked (a folder selection includes everything inside it)
-- Choose what to do with duplicates: rename, replace or skip
-- Size, packed size, percentage saved and modified date for every entry
-- **Zip-slip protection**: entries that try to escape the destination folder (`../`, absolute paths, drive letters) are blocked and reported
-- **Test integrity** (F5): reads every file end to end, verifying ZIP CRCs and TAR compressor checksums
+- Browse archives as folders with breadcrumbs, search across the whole archive, and see size, packed size, percentage saved, date, and lock status
+- Extract everything or only the selected files and folders
+- Choose what to do with existing files: keep both, replace, or skip
+- Enter a password when an archive needs one
+- Path-traversal protection: entries that would escape the destination (`../`, absolute paths, drive letters) are blocked
+- Test (F5) reads every byte and checks checksums
+
+**Recovery**
+- Check a PAR2 set (intact, repairable, or unrepairable) and repair damaged archives
 
 **Experience**
-- One window, two tabs, a single progress bar with speed and a Cancel button
-- Keyboard shortcuts (Ctrl+Enter, Ctrl+O, F5, Delete, Esc, F1)
-- Command-line support: `Shonchoy.exe archive.zip` opens it, and `Shonchoy.exe a.txt folder` adds those items to a new archive
-- Shonchoy logo built into the app header and the Windows icon
+- Light, dark, and system themes
+- Keyboard shortcuts: Ctrl+Enter, Ctrl+O, Ctrl+A, F5, F1, Esc
+- Double-click or "Open with" an archive: Shonchoy opens it. A second launch hands its files to the running window.
+- Format detection reads file signatures, so a mis-named file still opens correctly
 
 ---
 
 ## Honest scope
 
-Shonchoy v1.0 focuses on the formats and workflows that work reliably with the Python standard library. It does **not yet** include:
+These are the limits, stated plainly:
 
-- RAR and 7z reading or writing
-- Password encryption (AES). ZIP encryption needs a third-party library, which this build deliberately avoids.
-- Zstandard, multi-volume archives and recovery records
-- Drag and drop from Explorer (planned)
-- Dark theme (planned)
-
-These are on the roadmap. Shonchoy is designed so that each one can be added as a self-contained module without touching the UI.
+- **RAR is read-only.** The RAR format is proprietary, and creating RAR archives requires WinRAR's commercial encoder. Shonchoy reads and extracts RAR (including encrypted RAR) using node-unrar-js, but it cannot create RAR files.
+- **Zstandard needs the zstd tool.** Put `zstd.exe` in `resources/bin` (see that folder's README). Without it, TAR.ZST and `.zst` are disabled and the UI says why.
+- **Recovery needs par2cmdline.** Put `par2.exe` in `resources/bin`. Without it, recovery options are disabled.
+- **Encryption is not available for TAR-family formats.** TAR has no encryption standard. Use 7z or ZIP.
+- **Passwords are passed to the engine as command-line arguments.** Other programs running as the same user can see them in the process list while the job runs. This is a known limitation of the 7-Zip command-line interface, and it matters on shared machines.
+- **Selective extraction of folders** works by expanding each folder into its files. Empty folders inside the selection are recreated only when they contain files.
+- **Progress on RAR and zstd operations is indeterminate** because those engines do not report percentages.
+- **Not yet included:** drag-out to Explorer, context-menu integration, Zstandard for 7z containers, and a benchmark tool. These are planned.
 
 ---
 
-## Install and run from source
+## Run from source
 
-Requires **Python 3.9 or newer** on Windows, macOS or Linux. Tkinter ships with the official Python installer.
+Requirements: **Node.js 20 or newer** and Windows 10/11 (macOS and Linux should also run it, but Windows is the target).
 
 ```bat
-python run_shonchoy.py
-python run_shonchoy.py "C:\Users\me\Downloads\photos.zip"
+cd Shonchoy
+npm install
+npm start
 ```
 
-## Build a standalone Windows executable
+`npm install` downloads Electron, the 7-Zip engine (`7zip-bin`), and the RAR reader (`node-unrar-js`). It needs internet access once. After that, Shonchoy runs offline.
 
-Double-click `build_windows.bat`, or run it from a terminal. The output is `dist\Shonchoy.exe`, a single portable file. You can copy it to a USB drive and run it without installing anything.
+Optional: add `zstd.exe` and `par2.exe` to `resources/bin` for TAR.ZST and PAR2 support.
+
+## Build a Windows portable app
+
+```bat
+npm install
+npm run dist
+```
+
+The output is in `dist\`: a single portable `Shonchoy-2.0.0-x64.exe`. It runs without installation.
 
 ## Run the tests
 
 ```bat
-python -m unittest discover -s tests -v
+npm test
 ```
 
-## Regenerate the logo
-
-```bat
-python tools\make_icon.py
-```
-
-The vector source is `assets/shonchoy.svg`.
+The test suite covers format detection, command builders, the listing parser, error classification, path-safety rules, overwrite policy, and selection expansion. These tests run without Electron or the external engines.
 
 ---
 
@@ -85,33 +93,49 @@ The vector source is `assets/shonchoy.svg`.
 
 ```
 Shonchoy/
-├── run_shonchoy.py          launcher (used for source runs and PyInstaller)
-├── build_windows.bat        one-click build of Shonchoy.exe
-├── shonchoy/
-│   ├── __init__.py          version and developer info
-│   ├── core.py              archive engine: create, list, extract, test
-│   ├── app.py               Tkinter interface
-│   └── __main__.py          python -m shonchoy
-├── tools/make_icon.py       dependency-free logo and icon generator
-├── assets/                  logo (SVG, PNG) and Windows icon (ICO)
-├── tests/test_core.py       engine test suite
-├── LICENSE
-└── README.md
+├── main.js                  Electron main process: window, IPC, jobs, file-open routing
+├── preload.js               Secure bridge. The UI never gets Node or Electron objects.
+├── package.json             Dependencies and electron-builder config
+├── src/
+│   ├── engine/
+│   │   ├── archive.js       Open, create, extract, test, recovery (orchestration)
+│   │   ├── args.js          Pure builders for 7-Zip command lines
+│   │   ├── parse.js         Pure parsers: 7-Zip listings, progress, error codes, paths
+│   │   ├── detect.js        Format detection by file signature
+│   │   ├── select.js        Folder selection expansion
+│   │   ├── proc.js          Child process runner with progress and cancel
+│   │   ├── jobs.js          Job registry, cancellation, temp-file cleanup
+│   │   ├── rar.js           RAR reading and extraction
+│   │   ├── zstd.js          zstd wrapper (optional binary)
+│   │   ├── par2.js          PAR2 wrapper (optional binary)
+│   │   ├── fsutil.js        Sizes, safe targets, overwrite policy
+│   │   ├── tools.js         Locates bundled engines
+│   │   └── errors.js        Error type with stable codes
+│   └── renderer/
+│       ├── index.html       Layout
+│       ├── styles.css       Light, dark, and system themes
+│       └── app.js           UI logic
+├── assets/                  Logo (SVG, PNG) and Windows icon
+├── resources/bin/           Optional zstd.exe and par2.exe go here
+└── tests/engine.test.js     Unit tests for the pure engine logic
 ```
 
 ## Design principles
 
-1. **Never lose data.** Writes go to temporary files first. Cancelled jobs clean up after themselves.
-2. **Never trust archives.** Path traversal is blocked, and every entry is validated before it touches disk.
-3. **Never freeze the UI.** All disk work runs on background threads, and progress is streamed back.
-4. **Stay offline.** The app contains no network code.
+1. **Never lose data.** Existing archives are removed only after you confirm. Failed or cancelled jobs clean up partial output.
+2. **Never trust an archive.** Every entry is checked before it touches disk.
+3. **Never freeze the window.** All engine work runs in child processes or background jobs, and progress streams back.
+4. **Stay offline and dependency-light.** No telemetry. The engines are standard, well-known tools.
+5. **Be honest about limits.** Unsupported operations are disabled with a reason, not silently skipped.
 
 ## Contributing
 
-Pull requests are welcome. Keep the engine free of GUI code and keep runtime dependencies at zero where possible.
+Keep the engine free of UI code. Put new parsing and argument logic in the pure modules so it can be tested without Electron. Add a test for every new error code.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
 
 Copyright (c) 2026 **Muhammad Hasan Zarif**
+
+Third-party components keep their own licenses: 7-Zip (LGPL with unRAR restriction), node-unrar-js (unRAR license), Electron (MIT), and optionally zstd (BSD) and par2cmdline (GPL). Review them before distributing a build.
